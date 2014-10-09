@@ -1,3 +1,12 @@
+/* Grupo 55
+ * 
+ * Cristiano Rocha nº62502
+ * Pedro Saraiva nº70848
+ * Francisco Dias nº75328
+ * 
+ * Exercício 1
+ * */
+
 #include <stdio.h>
 #include <fcntl.h>
 #include "consts.h"
@@ -22,15 +31,13 @@ int main(int argc, char *argv[]) {
 
   int i, j;
   for(i=0; i<TOTAL_WRITES; i++) {
-    int fileIndex = rand() % N_FILES;
-    int strIndex = rand() % N_STRINGS;
+    int fileIndex = rand() % N_FILES; /*escolhemos o ficheiro aleatoriamente */
+    int strIndex = rand() % N_STRINGS; /*escolhemos a cadeia aleatoriamente */
 
-    /*printf("%d - writing %s on %s\n\n", i+1, str[strIndex], fileName[fileIndex]);*/
-
-    int file = open(fileName[fileIndex], O_CREAT | O_RDWR, 0644);
+    int file = open(fileName[fileIndex], O_CREAT | O_RDWR, 0644); /* abrimos o ficheiro ou criamos caso este não exista. caso o ficheiro exista o seu conteúdo é substituído*/
 
     for(j=0; j<TOTAL_LINES; j++) {
-      write(file, str[strIndex], STR_LENGTH);
+      write(file, str[strIndex], STR_LENGTH); /*escrevemos a cadeia de caracteres escolhida aleatoriamente 1024 vezes */
     }
 
     close(file);
