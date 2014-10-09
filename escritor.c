@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include <fcntl.h>
-
-
-#define TOTAL_WRITES 5120
-#define TOTAL_LINES 1024
-
-const char *str[10];
-
-const char *fileName[5];
-
+#include "consts.h"
 
 int main(int argc, char *argv[]) {
   str[0] = "aaaaaaaaa\n";
@@ -30,15 +22,15 @@ int main(int argc, char *argv[]) {
 
   int i, j;
   for(i=0; i<TOTAL_WRITES; i++) {
-    int fileIndex = rand() % 5;
-    int strIndex = rand() % 10;
+    int fileIndex = rand() % N_FILES;
+    int strIndex = rand() % N_STRINGS;
 
-    printf("%d - writing %s on %s\n\n", i+1, str[strIndex], fileName[fileIndex]);
+    /*printf("%d - writing %s on %s\n\n", i+1, str[strIndex], fileName[fileIndex]);*/
 
     int file = open(fileName[fileIndex], O_CREAT | O_RDWR, 0644);
 
     for(j=0; j<TOTAL_LINES; j++) {
-      write(file, str[strIndex], 10);
+      write(file, str[strIndex], STR_LENGTH);
     }
 
     close(file);

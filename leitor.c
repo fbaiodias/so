@@ -2,10 +2,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <string.h>
-
-#define TOTAL_LINES 1024
-
-const char *fileName[5];
+#include "consts.h"
 
 int main(int argc, char *argv[]) {
 
@@ -17,15 +14,15 @@ int main(int argc, char *argv[]) {
 
   int i, timesRead;
   
-  char buffer[10];
-  char firstLine[10];
+  char buffer[STR_LENGTH];
+  char firstLine[STR_LENGTH];
   size_t nbytes;
   
   timesRead = 0;
   
   nbytes = sizeof(buffer);
  
-  int fileIndex = rand() % 5;
+  int fileIndex = rand() % N_FILES;
   
   int file = open(fileName[fileIndex], O_RDONLY, 0644);
   
@@ -49,9 +46,11 @@ int main(int argc, char *argv[]) {
   
   if(timesRead == TOTAL_LINES)
   {
+	  puts("0");
 	return 0;
   }
   else{
+	 puts("-1");
 	return -1;
   }
 
