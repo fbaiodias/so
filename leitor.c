@@ -56,12 +56,13 @@ int main(int argc, char *argv[]) {
   }
   
   close(file);
-  
-  if(timesRead == TOTAL_LINES) /* verifica que se existe a mesma cadeia de caracteres repetida 1024 e devolve 0 se true e -1 se false */
+  if(timesRead == TOTAL_LINES-1) /* verifica que se existe a mesma cadeia de caracteres repetida 1024 e devolve 0 se true e -1 se false */
   {
+	printf("Ficheiros estão correctos\n");
 	return 0;
   }
   else{
+	printf("Existem ficheiros incorrectos\n");
 	return -1;
   }
 
