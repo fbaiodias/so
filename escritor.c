@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/time.h>
 #include <time.h>
 #include "consts.h"
 
@@ -37,24 +38,31 @@ int main(int argc, char *argv[]) {
   pid_t *childPids = NULL;
   pid_t p;
   
-
-  char *cwd;
-  char buf[PATH_MAX + 1];
-  cwd = getcwd(buf, PATH_MAX +1);
-  char *execname;
+  char *execname; /* variável para guardar o caminho para o executável */
   execname = malloc(sizeof(char)*PATH_MAX);
-  strcpy(execname, cwd);
+  char buf[PATH_MAX + 1]; /* buffer para obtermos o cwd */
+  execname = getcwd(buf, PATH_MAX +1);
   execname = strcat(execname, "/escritor-helper");
-  clock_t start, finish;
   double time_spent;
-  
-  
 
-int ii;
+  struct timeval tvstart; /* data de inicio */
+  struct timeval tvend; /* data de fim */
+  struct timeval tvduration; /* diferenca entre as duas datas */
+  unsigned int duration; /* diferenca entre as datas em microssegundos */
+
+  time_t curtime; /* tempo em formato time_t para conversao de formatos */
+  char buffer[30]; /* para escrever a data em formato legivel */
+  
+  int ii;
+  int stillWaiting;
 
   childPids = malloc(N_CHILDREN * sizeof(pid_t));
   
-  start = clock();
+  gettimeofday(&tvstart, NULL); /* ler a data actual */
+  /* converter e imprimir a data */
+  curtime=tvstart.tv_sec;
+  strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
+  printf("inicio: %s%ld\n",buffer,tvstart.tv_usec);
   for (ii = 0; ii < N_CHILDREN; ++ii) {
     if ((p = fork()) == 0) {
 	execv(execname, NULL);
@@ -64,7 +72,7 @@ int ii;
     }
   }
   /* Wait for children to exit */
-  int stillWaiting;
+  
   do {
     stillWaiting = 0;
     for (ii = 0; ii < N_CHILDREN; ++ii) {
@@ -83,9 +91,17 @@ int ii;
       sleep(0);
     }
   } while (stillWaiting);
-  finish = clock();
-  time_spent = (double) (finish-start) / CLOCKS_PER_SEC;
-  printf("Tempo de execução: %f\n", time_spent);
+gettimeofday(&tvend, NULL); /* ler a data actual */
+  /* converter e imprimir a data */
+  curtime=tvend.tv_sec;
+  strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
+  printf("fim: %s%ld\n",buffer,tvend.tv_usec);
+
+  /* calcular e imprimir a diferenca de datas */
+  tvduration.tv_sec = tvend.tv_sec - tvstart.tv_sec;
+  tvduration.tv_usec = tvend.tv_usec - tvstart.tv_usec;
+  duration = tvduration.tv_sec * 1000000 + tvduration.tv_usec;
+  printf("duracao: %d microssegundos\n", duration);
   /* Cleanup */
   free(childPids);
 
