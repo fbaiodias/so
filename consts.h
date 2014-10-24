@@ -13,9 +13,10 @@
 #define STR_LENGTH 10
 #define N_FILES 5
 #define N_CHILDREN 10
+#define get_random(max) rand()%max
 
 const char *str[N_STRINGS];
 
 const char *fileName[N_FILES];
 
-#define get_random(max) rand()%max
+

@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
   pid_t p;
   
   char *execname; /* variável para guardar o caminho para o executável */
-  execparms[0] = malloc(sizeof(char)*PATH_MAX);
   char buf[PATH_MAX + 1]; /* buffer para obtermos o cwd */
+  /* colocamos o caminho completo para o executavel auxiliar no execparms */
   execparms[0] = getcwd(buf, PATH_MAX +1);
   execparms[0] = strcat(execparms[0], "/escritor-helper");
 
@@ -64,6 +64,9 @@ int main(int argc, char *argv[]) {
   curtime=tvstart.tv_sec;
   strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
   printf("inicio: %s%ld\n",buffer,tvstart.tv_usec);
+  
+  /* se p == 0 estamos no processo pai por isso criamos um filho. caso contrário estamos no processo filho e guardamos o pid no array de pids */
+
   for (i = 0; i < N_CHILDREN; ++i) {
     if ((p = fork()) == 0) {
 	execv(execparms[0], execparms);
@@ -72,15 +75,17 @@ int main(int argc, char *argv[]) {
       childPids[i] = p;
     }
   }
+
   /* ciclo "infinito" para esperar que todos os filhos acabem. enquanto um dos filhos não tiver acabado o ciclo continua */
-  
   do {
     waitingForChildren = 0;
     for (i = 0; i < N_CHILDREN; ++i) {
 	if (childPids[i] > 0) {
 		/* usamos WNOHANG para que o programa não pare à espera que o filho acabe. assim podemos continuar o ciclo e verificar os restantes filhos */
+
 		if (waitpid(childPids[i], NULL, WNOHANG) != 0) {
-		  /* Child acabou */
+
+		  /* Child acabou por isso colocamos 0 no array de pids */
 			printf("Child: %d ended\n", childPids[i]);
 		        childPids[i] = 0;
         }
@@ -90,7 +95,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-  } while (waitingForChildren);
+  } while (waitingForChildren != 0);
 
   gettimeofday(&tvend, NULL); /* ler a data actual */
   /* converter e imprimir a data */
