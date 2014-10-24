@@ -1,4 +1,4 @@
-all: escritor leitor escritor-helper
+all: clean escritor leitor escritor-helper
 
 escritor: escritor.c
 	gcc -g -o escritor escritor.c
