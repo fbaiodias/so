@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
   fileName[3] = "SO2014-3.txt";
   fileName[4] = "SO2014-4.txt";
 
+  char *execparms[1];
+
   pid_t *childPids = NULL;
   pid_t p;
   
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
   char buf[PATH_MAX + 1]; /* buffer para obtermos o cwd */
   execname = getcwd(buf, PATH_MAX +1);
   execname = strcat(execname, "/escritor-helper");
+  execparms[0] = execname;
   double time_spent;
 
   struct timeval tvstart; /* data de inicio */
@@ -65,7 +68,7 @@ int main(int argc, char *argv[]) {
   printf("inicio: %s%ld\n",buffer,tvstart.tv_usec);
   for (ii = 0; ii < N_CHILDREN; ++ii) {
     if ((p = fork()) == 0) {
-	execv(execname, NULL);
+	execv(execparms[0], execparms);
     }
     else {
       childPids[ii] = p;

@@ -17,3 +17,5 @@
 const char *str[N_STRINGS];
 
 const char *fileName[N_FILES];
+
+#define get_random(max) rand()%max
