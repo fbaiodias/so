@@ -35,18 +35,16 @@ int main(int argc, char *argv[]) {
   fileName[3] = "SO2014-3.txt";
   fileName[4] = "SO2014-4.txt";
 
-  char *execparms[1];
+  char *execparms[1]; /* array of pointers para passar para o execv. como não temos parametros nenhuns só tem 1 slot */
 
-  pid_t *childPids = NULL;
+  pid_t *childPids = NULL; /* array de pids dos filhos */
   pid_t p;
   
   char *execname; /* variável para guardar o caminho para o executável */
-  execname = malloc(sizeof(char)*PATH_MAX);
+  execparms[0] = malloc(sizeof(char)*PATH_MAX);
   char buf[PATH_MAX + 1]; /* buffer para obtermos o cwd */
-  execname = getcwd(buf, PATH_MAX +1);
-  execname = strcat(execname, "/escritor-helper");
-  execparms[0] = execname;
-  double time_spent;
+  execparms[0] = getcwd(buf, PATH_MAX +1);
+  execparms[0] = strcat(execparms[0], "/escritor-helper");
 
   struct timeval tvstart; /* data de inicio */
   struct timeval tvend; /* data de fim */
@@ -56,8 +54,8 @@ int main(int argc, char *argv[]) {
   time_t curtime; /* tempo em formato time_t para conversao de formatos */
   char buffer[30]; /* para escrever a data em formato legivel */
   
-  int ii;
-  int stillWaiting;
+  int i;
+  int waitingForChildren;
 
   childPids = malloc(N_CHILDREN * sizeof(pid_t));
   
@@ -66,35 +64,35 @@ int main(int argc, char *argv[]) {
   curtime=tvstart.tv_sec;
   strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
   printf("inicio: %s%ld\n",buffer,tvstart.tv_usec);
-  for (ii = 0; ii < N_CHILDREN; ++ii) {
+  for (i = 0; i < N_CHILDREN; ++i) {
     if ((p = fork()) == 0) {
 	execv(execparms[0], execparms);
     }
     else {
-      childPids[ii] = p;
+      childPids[i] = p;
     }
   }
-  /* Wait for children to exit */
+  /* ciclo "infinito" para esperar que todos os filhos acabem. enquanto um dos filhos não tiver acabado o ciclo continua */
   
   do {
-    stillWaiting = 0;
-    for (ii = 0; ii < N_CHILDREN; ++ii) {
-	if (childPids[ii] > 0) {
-        if (waitpid(childPids[ii], NULL, WNOHANG) != 0) {
-          /* Child acabou */
-		printf("%d ended\n", childPids[ii]);
-          childPids[ii] = 0;
+    waitingForChildren = 0;
+    for (i = 0; i < N_CHILDREN; ++i) {
+	if (childPids[i] > 0) {
+		/* usamos WNOHANG para que o programa não pare à espera que o filho acabe. assim podemos continuar o ciclo e verificar os restantes filhos */
+		if (waitpid(childPids[i], NULL, WNOHANG) != 0) {
+		  /* Child acabou */
+			printf("Child: %d ended\n", childPids[i]);
+		        childPids[i] = 0;
         }
         else {
-          /* Still waiting on this child */
-          stillWaiting = 1;
+          /* continuamos à espera que os filhos acabem */
+          waitingForChildren = 1;
         }
       }
-      /* Give up timeslice and prevent hard loop: this may not work on all flavors of Unix */
-      sleep(0);
     }
-  } while (stillWaiting);
-gettimeofday(&tvend, NULL); /* ler a data actual */
+  } while (waitingForChildren);
+
+  gettimeofday(&tvend, NULL); /* ler a data actual */
   /* converter e imprimir a data */
   curtime=tvend.tv_sec;
   strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
@@ -107,6 +105,7 @@ gettimeofday(&tvend, NULL); /* ler a data actual */
   printf("duracao: %d microssegundos\n", duration);
   /* Cleanup */
   free(childPids);
+
 
   return 0;
 }
