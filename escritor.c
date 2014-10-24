@@ -4,7 +4,7 @@
  * Pedro Saraiva nº70848
  * Francisco Dias nº75328
  * 
- * Exercício 1
+ * Exercício 2
  * */
 
 #include <stdio.h>
