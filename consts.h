@@ -14,6 +14,8 @@
 #define N_FILES 5
 #define N_CHILDREN 10
 #define get_random(max) rand()%max
+#define DEFAULT_CHILD_EXEC_PATH "escritor-helper"
+#define CHILD_ARG0 "escritor-helper"
 
 const char *str[N_STRINGS];
 

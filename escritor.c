@@ -36,22 +36,22 @@ int main(int argc, char *argv[]) {
   fileName[3] = "SO2014-3.txt";
   fileName[4] = "SO2014-4.txt";
 
-  char *execparms[2]; /* array of pointers para passar para o execv. como não temos parametros nenhuns só tem 1 slot */
+  char *childExecPath;
 
   pid_t *childPids = NULL; /* array de pids dos filhos */
   pid_t p;
   
-  char *execname; /* variável para guardar o caminho para o executável */
-  char buf[PATH_MAX + 1]; /* buffer para obtermos o cwd */
-  /* colocamos o caminho completo para o executavel auxiliar no execparms */
-  execparms[0] = getcwd(buf, PATH_MAX +1);
-  execparms[0] = strcat(execparms[0], "/escritor-helper");
-  execparms[1] = NULL;
+  if (argc >=2)
+    childExecPath = argv[1];
+  else
+    childExecPath = DEFAULT_CHILD_EXEC_PATH;
 
   struct timeval tvstart; /* data de inicio */
   struct timeval tvend; /* data de fim */
   struct timeval tvduration; /* diferenca entre as duas datas */
   unsigned int duration; /* diferenca entre as datas em microssegundos */
+
+  int status, valorExit;
 
   time_t curtime; /* tempo em formato time_t para conversao de formatos */
   char buffer[30]; /* para escrever a data em formato legivel */
@@ -61,7 +61,12 @@ int main(int argc, char *argv[]) {
 
   childPids = malloc(N_CHILDREN * sizeof(pid_t));
   
-  gettimeofday(&tvstart, NULL); /* ler a data actual */
+  /* ler data actual */
+
+  if (gettimeofday(&tvstart, NULL) == -1) {
+    perror("Could not get time of day, exiting.");
+    exit(-1);
+  }
   /* converter e imprimir a data */
   curtime=tvstart.tv_sec;
   strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
@@ -71,7 +76,14 @@ int main(int argc, char *argv[]) {
 
   for (i = 0; i < N_CHILDREN; ++i) {
     if ((p = fork()) == 0) {
-	execv(execparms[0], execparms);
+	if(execl(childExecPath,CHILD_ARG0, NULL) == -1){
+	perror("Could not execute child program.");
+	exit(-1);
+	}
+    }
+    else if(p < -0){
+      perror("Could not fork a child.");
+      exit(-1);
     }
     else {
       childPids[i] = p;
@@ -84,12 +96,14 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < N_CHILDREN; ++i) {
 	if (childPids[i] > 0) {
 		/* usamos WNOHANG para que o programa não pare à espera que o filho acabe. assim podemos continuar o ciclo e verificar os restantes filhos */
+		if (waitpid(childPids[i], &status, WNOHANG) != 0) {
+			if (WIFEXITED(status)) {
+			  valorExit = (char) WEXITSTATUS(status);
+			  printf("Child: %d ended with return value %d\n", childPids[i], valorExit);
+			  childPids[i] = 0;
+        		}
+			else {printf("Child didn't exit or return\n");} 
 
-		if (waitpid(childPids[i], NULL, WNOHANG) != 0) {
-
-		  /* Child acabou por isso colocamos 0 no array de pids */
-			printf("Child: %d ended\n", childPids[i]);
-		        childPids[i] = 0;
         }
         else {
           /* continuamos à espera que os filhos acabem */

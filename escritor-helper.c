@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
       write(file, str[strIndex], STR_LENGTH); /*escrevemos a cadeia de caracteres escolhida aleatoriamente 1024 vezes */
     }
     
-    sleep(10);
+    sleep(1);
     flock(file, LOCK_UN);
     printf("Lock released by process %d\n", getpid());
 
