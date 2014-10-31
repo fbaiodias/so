@@ -73,9 +73,7 @@ int main (int argc, char** argv) {
 		exit (-1);
       }
     }
-	sleep(10);
-    
-    
+   
     flock(fd, LOCK_UN);
     
     printf("Lock released by process %d\n", getpid());
