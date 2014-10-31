@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 	exit(-1);
 	}
     }
-    else if(p < -0){
+    else if(p < 0){
       perror("Could not fork a child.");
       exit(-1);
     }
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 			  printf("Child: %d ended with return value %d\n", childPids[i], valorExit);
 			  childPids[i] = 0;
         		}
-			else {printf("Child didn't exit or return\n");} 
+			else {perror("Child didn't exit or return");} 
 
         }
         else {
