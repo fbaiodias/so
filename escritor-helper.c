@@ -1,9 +1,9 @@
 /* Grupo 55
- * 
+ *
  * Cristiano Rocha nº62502
  * Pedro Saraiva nº70848
  * Francisco Dias nº75328
- * 
+ *
  * Exercício 3
  * */
 
@@ -37,13 +37,13 @@ int main(int argc, char *argv[]) {
 
     int file = open(fileName[fileIndex], O_CREAT | O_RDWR, 0644); /* abrimos o ficheiro ou criamos caso este não exista. caso o ficheiro exista o seu conteúdo é substituído*/
 	flock(file, LOCK_EX);
-	
+
 	printf("Lock acquired by process %d\n", getpid());
 
     for(j=0; j<TOTAL_LINES; j++) {
       write(file, str[strIndex], STR_LENGTH); /*escrevemos a cadeia de caracteres escolhida aleatoriamente 1024 vezes */
     }
-    
+
     flock(file, LOCK_UN);
     printf("Lock released by process %d\n", getpid());
 

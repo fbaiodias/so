@@ -1,9 +1,9 @@
 /* Grupo 55
- * 
+ *
  * Cristiano Rocha nº62502
  * Pedro Saraiva nº70848
  * Francisco Dias nº75328
- * 
+ *
  * Exercício 3
  * */
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
   pid_t *childPids = NULL; /* array de pids dos filhos */
   pid_t p;
-  
+
   if (argc >=2)
     childExecPath = argv[1];
   else
@@ -55,12 +55,12 @@ int main(int argc, char *argv[]) {
 
   time_t curtime; /* tempo em formato time_t para conversao de formatos */
   char buffer[30]; /* para escrever a data em formato legivel */
-  
+
   int i;
   int waitingForChildren;
 
   childPids = malloc(N_CHILDREN * sizeof(pid_t));
-  
+
   /* ler data actual */
 
   if (gettimeofday(&tvstart, NULL) == -1) {
@@ -71,15 +71,15 @@ int main(int argc, char *argv[]) {
   curtime=tvstart.tv_sec;
   strftime(buffer,30,"%m-%d-%Y  %T.",localtime(&curtime));
   printf("inicio: %s%ld\n",buffer,tvstart.tv_usec);
-  
+
   /* se p == 0 estamos no processo pai por isso criamos um filho. caso contrário estamos no processo filho e guardamos o pid no array de pids */
 
   for (i = 0; i < N_CHILDREN; ++i) {
     if ((p = fork()) == 0) {
-	if(execl(childExecPath,CHILD_ARG0, NULL) == -1){
-	perror("Could not execute child program.");
-	exit(-1);
-	}
+    	if(execl(childExecPath,CHILD_ARG0, NULL) == -1){
+      	perror("Could not execute child program.");
+      	exit(-1);
+    	}
     }
     else if(p < 0){
       perror("Could not fork a child.");
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 			  printf("Child: %d ended with return value %d\n", childPids[i], valorExit);
 			  childPids[i] = 0;
         		}
-			else {perror("Child didn't exit or return");} 
+			else {perror("Child didn't exit or return");}
 
         }
         else {

@@ -1,10 +1,10 @@
 /* Grupo 55
- * 
+ *
  * Cristiano Rocha nº62502
  * Pedro Saraiva nº70848
  * Francisco Dias nº75328
- * 
- * Exercício 3
+ *
+ * Exercício 4
  * */
 
 #include <stdio.h>
@@ -22,7 +22,7 @@
 +-------------------------------------------------------------------------------------*/
 
 
-char* myfiles[N_FILES] = { "SO2014-0.txt", 
+char* myfiles[N_FILES] = { "SO2014-0.txt",
 			    "SO2014-1.txt",
 			    "SO2014-2.txt",
 			    "SO2014-3.txt",
@@ -36,14 +36,18 @@ char* myfiles[N_FILES] = { "SO2014-0.txt",
 int main (int argc, char** argv) {
   char  *file_to_open;
   int   fd, lock;
+  int   file_to_open_index;
 
-  /* Initialize the seed of random number generator */
-  srandom ((unsigned) time(NULL));
+  if (argc >=2)
+    file_to_open_index = atoi(argv[1]);
+  else
+    file_to_open_index = 0;
 
-  file_to_open = myfiles[get_random(N_FILES)];
-  fd  = open (file_to_open, O_RDONLY);
+
+  file_to_open = myfiles[file_to_open_index];
+  fd = open (file_to_open, O_RDONLY);
   flock(fd, LOCK_SH);
-  
+
   printf("Lock acquired by process %d\n", getpid());
 
   printf("Monitor will check if file %s is consistent...\n", file_to_open);
@@ -62,28 +66,31 @@ int main (int argc, char** argv) {
       exit (-1);
     }
     for (i=0; i<TOTAL_LINES-1; i++) {
-      
+
       if (read (fd, string_to_read, STR_LENGTH) == -1) {
-		perror ("Error reading file");
-		exit (-1);
+    		perror ("Error reading file");
+    		exit (-1);
       }
 
       if (strncmp(string_to_read, first_string, STR_LENGTH)) {
-		fprintf (stderr, "Inconsistent file: %s\n", file_to_open);
-		exit (-1);
+    		fprintf (stderr, "Inconsistent file: %s\n", file_to_open);
+    		exit (-1);
       }
     }
-   
+
     flock(fd, LOCK_UN);
-    
+
     printf("Lock released by process %d\n", getpid());
-     
+
     if (close (fd) == -1)  {
       perror ("Error closing file");
       exit (-1);
     }
   }
+
   printf("YES.\n");
+
+  return 0;
 }
 
 
