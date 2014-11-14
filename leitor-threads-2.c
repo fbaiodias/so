@@ -31,7 +31,7 @@ char* myfiles[N_FILES] = { "SO2014-0.txt",
 int* threadedFunction(char *file)
 {
 
-  int fd, lock;
+  int fd;
 
   fd = open (file, O_RDONLY);
 
@@ -81,7 +81,7 @@ int main (int argc, char** argv) {
 
   pthread_t * serverThreads;
   serverThreads = (pthread_t *) malloc (sizeof (pthread_t) * N_THREADS);
-  int i, err, status;
+  int i, err;
   char *file;
   void *returnvalue;
 
@@ -99,6 +99,7 @@ int main (int argc, char** argv) {
 
   for (i = 0; i < N_THREADS; i++) {
     err = pthread_join (serverThreads[i], &returnvalue);
+    printf("Thread %d returned %ld\n", i, (long int)returnvalue);
     if (err != 0) {
       perror ("\nerror: thread creation failed\n");
       exit (EXIT_FAILURE);

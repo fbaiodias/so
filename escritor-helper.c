@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/file.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 #include "consts.h"
 
 int main(int argc, char *argv[]) {
@@ -32,8 +36,8 @@ int main(int argc, char *argv[]) {
 
   int i, j;
   for(i=0; i<(TOTAL_WRITES/N_CHILDREN); i++) {
-    int fileIndex = rand() % N_FILES; /*escolhemos o ficheiro aleatoriamente */
-    int strIndex = rand() % N_STRINGS; /*escolhemos a cadeia aleatoriamente */
+    int fileIndex = get_random(N_FILES); /*escolhemos o ficheiro aleatoriamente */
+    int strIndex = get_random(N_STRINGS); /*escolhemos a cadeia aleatoriamente */
 
     int file = open(fileName[fileIndex], O_CREAT | O_RDWR, 0644); /* abrimos o ficheiro ou criamos caso este não exista. caso o ficheiro exista o seu conteúdo é substituído*/
 	flock(file, LOCK_EX);

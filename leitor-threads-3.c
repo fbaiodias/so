@@ -28,78 +28,64 @@ char* myfiles[N_FILES] = { "SO2014-0.txt",
           "SO2014-3.txt",
           "SO2014-4.txt"};
 
-struct arg_struct {
-    char* file;
-    int offset;
-    int size;
-    char stringToCompare[STR_LENGTH];
-    int i;
-}args;
+typedef struct {
+  int offset;
+  int linesToRead;
+} offset_table;
 
-int sectionsRead[N_THREADS];
+/* declarações globais.
+   variáveis que vão ser acedidas por todas as threads */
 
-void initSectionsRead(){
-  int i;
+offset_table *offsetTable;        /*tabela com N_THREADS posições e que contem em casa posição o offset e o número de linhas a ler */
+char *file;                       /*nome do ficheiro a ser aberto */
+char stringToCompare[STR_LENGTH]; /*primeira string do ficheiro a ser comparado */
+int linesRead;                    /*variável de teste the leitura de linhas (apagar antes de submeter)*/
 
-  for(i = 0; i < N_THREADS; i++)
+
+void initOffsetTable(int size)
+{
+  int i, offset;
+  offset = size / N_THREADS;
+
+  for(i = 0; i < N_THREADS-1; i++)
     {
-      sectionsRead[i] = 0;
+      offsetTable[i].offset = i * (offset - (offset % STR_LENGTH));
+      offsetTable[i].linesToRead = TOTAL_LINES / N_THREADS;
     }
+    offsetTable[i].offset = i * (offset - (offset % STR_LENGTH));
+    offsetTable[i].linesToRead = TOTAL_LINES - ((N_THREADS-1) * (int)(TOTAL_LINES / N_THREADS)); /* no caso da última thread que vai verificar a parte final do ficheiro pode ter de ler mais linhas do que as outras */
 }
+
 int* threadedFunction(void *arguments)
 {
+  int fd,j;
+  long i = (long) arguments;
 
-  int fd, i, j, section = -1;
-
-  int offset, end;
-
-  struct arg_struct *args = (struct arg_struct *)arguments;
-
-  for(i = 0; i < N_THREADS || section == -1; i++)
-  {
-    if(sectionsRead[i] == 0)
-      {
-        printf("section %i is not read\n", i);
-        section = i;
-      }
-  }
-
-  printf("section %i is read\n", section);
-  sectionsRead[section] = 1;
-  offset = i*args->offset;
-
-  fd = open (args->file, O_RDONLY);
+  fd = open (file, O_RDONLY);
 
   if (fd == -1) {
     perror ("Error opening file");
     return (void*)-1;
   }
   else {
-    lseek(fd, (off_t) offset, SEEK_SET);
+    lseek(fd, (off_t) offsetTable[i].offset, SEEK_SET);
     char string_to_read[STR_LENGTH];
-    if(i = N_THREADS -1)
-      {
-        end = TOTAL_LINES - args->offset;
-      }
-      else
-        {
-          end = args->offset;
-        }
 
-    for (j=0; j < args->offset; j = args->offset / STR_LENGTH) {
+    for (j = 0; j < offsetTable[i].linesToRead; j++ ){
 
       if (read (fd, string_to_read, STR_LENGTH) == -1) {
         perror ("Error reading file");
         return (void*)-1;
       }
-      printf("j: %d %d\n", j, args->offset);
 
-      if (strncmp(string_to_read, args->stringToCompare, STR_LENGTH)) {
-        printf("read: %s || compare: %s\n", string_to_read, args->stringToCompare);
-        fprintf (stderr, "Inconsistent file: %s\n", args->file);
+      if (strncmp(string_to_read, stringToCompare, STR_LENGTH)) {
+        printf("read: %s || compare: %s\n", string_to_read, stringToCompare);
+        fprintf (stderr, "Section %ld of file %s is inconsistent\n", i, file);
         return (void*)-1;
       }
+      linesRead++; /* apagar antes de submeter */
     }
+    printf("timesRead: %d\n", j); /* confirmação do número de linhas lida por thread (apagar antes de submeter) */
 
     if (close (fd) == -1)  {
       perror ("Error closing file");
@@ -107,7 +93,7 @@ int* threadedFunction(void *arguments)
     }
   }
 
-  printf("Section %i of the file %s is consistent\n", i, args->file);
+  printf("Section %ld of the file %s is consistent\n", i, file); /* pode ficar ou nao */
   return (void*)0;
 
 }
@@ -121,46 +107,50 @@ int main (int argc, char** argv) {
 
   pthread_t * serverThreads;
   serverThreads = (pthread_t *) malloc (sizeof (pthread_t) * N_THREADS);
-  int i, random, err, status, linesPerThread, fd;
-  char *file;
+  offsetTable = (offset_table *) malloc(sizeof (offset_table) * N_THREADS);
+  int err, fd, size, random;
+  long i;
   void *returnvalue;
+  linesRead = 0;
 
-  struct arg_struct args;
 
   srandom ((unsigned) time(NULL));
-  file = myfiles[get_random(N_FILES)];
 
+  random = get_random(N_FILES);
 
-  printf("%d\n", args.offset);
+  file = myfiles[0];
 
   fd = open (file, O_RDONLY);
-  char string_to_read[STR_LENGTH];
-
-
-  args.file = file;
-  if (read (fd, args.stringToCompare, STR_LENGTH) == -1) {
+  if (read (fd, stringToCompare, STR_LENGTH) == -1) {
     perror ("Error reading file");
     exit (-1);
   }
-  args.size = lseek(fd, (off_t) 0, SEEK_END);
-  args.offset = args.size/N_THREADS;
+  size = lseek(fd, (off_t) 0, SEEK_END);
+  initOffsetTable(size);
   close(fd);
   for (i = 0; i < N_THREADS; i++) {
-    err = pthread_create (&serverThreads[i], NULL, (void*) threadedFunction, (void*)&args);
+    err = pthread_create (&serverThreads[i], NULL, (void*) threadedFunction, (void*)i);
     if (err != 0) {
       perror ("\nerror: thread creation failed\n");
       exit (EXIT_FAILURE);
     }
-    printf("Checking file %s\n", file);
   }
 
   for (i = 0; i < N_THREADS; i++) {
     err = pthread_join (serverThreads[i], &returnvalue);
+    printf("returnvalue: %ld\n", (long int)returnvalue);
     if (err != 0) {
       perror ("\nerror: thread creation failed\n");
       exit (EXIT_FAILURE);
     }
+    if((long int)returnvalue != 0)
+      {
+        perror("File is inconsistent");
+        exit(-1);
+      }
   }
+
+  printf("linesRead: %d\n", linesRead);
 
   return 0;
 }

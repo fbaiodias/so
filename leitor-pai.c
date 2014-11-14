@@ -14,7 +14,8 @@
 #include <time.h>
 #include <string.h>
 #include <sys/file.h>
-
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "consts.h"
 
 /*-------------------------------------------------------------------------------------
@@ -33,8 +34,7 @@ int main (int argc, char** argv) {
 
   /* Initialize the seed of random number generator */
   srandom ((unsigned) time(NULL));
-
-  int status, valorExit;
+  int status, valorExit, random;
 
   int i;
   int waitingForChildren = 1;
@@ -44,11 +44,12 @@ int main (int argc, char** argv) {
 
   for (i = 0; i < N_READER_CHILDREN; ++i) {
     /* se p == 0 estamos no processo pai por isso criamos um filho. */
+    random = get_random(N_FILES);
     if ((p = fork()) == 0) {
-      char c[20];
-      sprintf(c, "%d", get_random(N_FILES));
+      char c[2];
+      sprintf(c, "%d", random);
 
-      if(execl("leitor", c, NULL) == -1){
+      if(execl(READER_EXEC_PATH, READER_EXEC_PATH, c, NULL) == -1){
         perror("Could not execute child program.");
         exit(-1);
       }

@@ -16,7 +16,7 @@ leitor-threads-2: leitor-threads-2.c consts.h
 	gcc -g -o leitor-threads-2 leitor-threads-2.c -lpthread
 
 leitor-threads-3: leitor-threads-3.c consts.h
-	gcc -g -o leitor-threads-3 leitor-threads-3.c -lpthread
+	gcc -Wall -g -o leitor-threads-3 leitor-threads-3.c -lpthread
 
 clean:
 	rm -f leitor escritor escritor-helper leitor-pai leitor-threads-2 leitor-threads-3 *.txt

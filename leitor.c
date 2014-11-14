@@ -35,18 +35,26 @@ char* myfiles[N_FILES] = { "SO2014-0.txt",
 
 int main (int argc, char** argv) {
   char  *file_to_open;
-  int   fd, lock;
+  int   fd;
   int   file_to_open_index;
 
-  if (argc >=2)
-    file_to_open_index = atoi(argv[1]);
-  else
-    file_to_open_index = 0;
+  if (argc > 2)
+		{
+    	perror("Too many arguments");
+			exit(-1);
+		}
+	file_to_open_index = atoi(argv[1]);
+
+	if(file_to_open_index > 4 || file_to_open_index < 0)
+		{
+			perror("Index out of bounds");
+			exit(-1);
+		}
 
 
   file_to_open = myfiles[file_to_open_index];
   fd = open (file_to_open, O_RDONLY);
-  flock(fd, LOCK_SH);
+
 
   printf("Lock acquired by process %d\n", getpid());
 
@@ -56,7 +64,11 @@ int main (int argc, char** argv) {
     perror ("Error opening file");
     exit (-1);
   }
-  else {
+  else if (flock(fd, LOCK_SH) == -1) {
+		perror ("Error getting lock");
+		exit (-1);
+	}
+	 else{
     char string_to_read[STR_LENGTH];
     char first_string[STR_LENGTH];
     int  i;
@@ -78,7 +90,11 @@ int main (int argc, char** argv) {
       }
     }
 
-    flock(fd, LOCK_UN);
+    if(flock(fd, LOCK_UN) == -1)
+			{
+				perror("Error releasing lock");
+				exit(-1);
+			}
 
     printf("Lock released by process %d\n", getpid());
 
@@ -92,5 +108,3 @@ int main (int argc, char** argv) {
 
   return 0;
 }
-
-
