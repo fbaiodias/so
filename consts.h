@@ -18,7 +18,7 @@
 #define DEFAULT_CHILD_EXEC_PATH "escritor-helper"
 #define CHILD_ARG0 "escritor-helper"
 #define READER_EXEC_PATH "leitor"
-#define N_THREADS 10
+#define N_THREADS 3
 
 const char *str[N_STRINGS];
 

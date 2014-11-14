@@ -70,22 +70,19 @@ int* threadedFunction(void *arguments)
   else {
     lseek(fd, (off_t) offsetTable[i].offset, SEEK_SET);
     char string_to_read[STR_LENGTH];
-
     for (j = 0; j < offsetTable[i].linesToRead; j++ ){
 
       if (read (fd, string_to_read, STR_LENGTH) == -1) {
         perror ("Error reading file");
         return (void*)-1;
       }
-
       if (strncmp(string_to_read, stringToCompare, STR_LENGTH)) {
-        printf("read: %s || compare: %s\n", string_to_read, stringToCompare);
-        fprintf (stderr, "Section %ld of file %s is inconsistent\n", i, file);
+        fprintf (stderr, "Section %ld of the file %s is inconsistent\n",i, file);
         return (void*)-1;
       }
-      linesRead++; /* apagar antes de submeter */
+
     }
-    printf("timesRead: %d\n", j); /* confirmação do número de linhas lida por thread (apagar antes de submeter) */
+    linesRead += j; /* só para confirmar linhas lidas */
 
     if (close (fd) == -1)  {
       perror ("Error closing file");
@@ -118,7 +115,7 @@ int main (int argc, char** argv) {
 
   random = get_random(N_FILES);
 
-  file = myfiles[0];
+  file = myfiles[random]; /* para testar alterar para myfiles[0] e alterar ficheiro SO2014-0.txt */
 
   fd = open (file, O_RDONLY);
   if (read (fd, stringToCompare, STR_LENGTH) == -1) {
@@ -138,7 +135,7 @@ int main (int argc, char** argv) {
 
   for (i = 0; i < N_THREADS; i++) {
     err = pthread_join (serverThreads[i], &returnvalue);
-    printf("returnvalue: %ld\n", (long int)returnvalue);
+    /*printf("returnvalue: %ld\n", (long int)returnvalue);*/ /*confirmar return value (apagar antes de submeter) */
     if (err != 0) {
       perror ("\nerror: thread creation failed\n");
       exit (EXIT_FAILURE);
@@ -150,7 +147,7 @@ int main (int argc, char** argv) {
       }
   }
 
-  printf("linesRead: %d\n", linesRead);
+  /*printf("linesRead: %d\n", linesRead);*/ /* confirmar linhas (apagar antes de submeter) */
 
   return 0;
 }
