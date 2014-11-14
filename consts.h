@@ -17,6 +17,7 @@
 #define get_random(max) rand()%max
 #define DEFAULT_CHILD_EXEC_PATH "escritor-helper"
 #define CHILD_ARG0 "escritor-helper"
+#define N_THREADS 3
 
 const char *str[N_STRINGS];
 

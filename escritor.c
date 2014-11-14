@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
   char buffer[30]; /* para escrever a data em formato legivel */
 
   int i;
-  int waitingForChildren;
+  int waitingForChildren = 1;
 
   childPids = malloc(N_CHILDREN * sizeof(pid_t));
 
@@ -91,27 +91,27 @@ int main(int argc, char *argv[]) {
   }
 
   /* ciclo "infinito" para esperar que todos os filhos acabem. enquanto um dos filhos não tiver acabado o ciclo continua */
-  do {
+  while (waitingForChildren != 0) {
     waitingForChildren = 0;
     for (i = 0; i < N_CHILDREN; ++i) {
-	if (childPids[i] > 0) {
-		/* usamos WNOHANG para que o programa não pare à espera que o filho acabe. assim podemos continuar o ciclo e verificar os restantes filhos */
-		if (waitpid(childPids[i], &status, WNOHANG) != 0) {
-			if (WIFEXITED(status)) {
-			  valorExit = (char) WEXITSTATUS(status);
-			  printf("Child: %d ended with return value %d\n", childPids[i], valorExit);
-			  childPids[i] = 0;
-        		}
-			else {perror("Child didn't exit or return");}
+    	if (childPids[i] > 0) {
+    		/* usamos WNOHANG para que o programa não pare à espera que o filho acabe. assim podemos continuar o ciclo e verificar os restantes filhos */
+    		if (waitpid(childPids[i], &status, WNOHANG) != 0) {
+    			if (WIFEXITED(status)) {
+    			  valorExit = (char) WEXITSTATUS(status);
+    			  printf("Child: %d ended with return value %d\n", childPids[i], valorExit);
+    			  childPids[i] = 0;
+            		}
+    			else {perror("Child didn't exit or return");}
 
-        }
-        else {
-          /* continuamos à espera que os filhos acabem */
-          waitingForChildren = 1;
+            }
+            else {
+              /* continuamos à espera que os filhos acabem */
+              waitingForChildren = 1;
         }
       }
     }
-  } while (waitingForChildren != 0);
+  }
 
   gettimeofday(&tvend, NULL); /* ler a data actual */
   /* converter e imprimir a data */
