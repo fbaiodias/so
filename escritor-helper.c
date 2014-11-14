@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
-
 #include "consts.h"
 
 int main(int argc, char *argv[]) {

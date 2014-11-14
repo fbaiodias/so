@@ -39,8 +39,6 @@ typedef struct {
 offset_table *offsetTable;        /*tabela com N_THREADS posições e que contem em casa posição o offset e o número de linhas a ler */
 char *file;                       /*nome do ficheiro a ser aberto */
 char stringToCompare[STR_LENGTH]; /*primeira string do ficheiro a ser comparado */
-int linesRead;                    /*variável de teste the leitura de linhas (apagar antes de submeter)*/
-
 
 void initOffsetTable(int size)
 {
@@ -68,7 +66,11 @@ int* threadedFunction(void *arguments)
     return (void*)-1;
   }
   else {
-    lseek(fd, (off_t) offsetTable[i].offset, SEEK_SET);
+    if(lseek(fd, (off_t) offsetTable[i].offset, SEEK_SET) == -1)
+      {
+        perror("Error moving the file pointer");
+        exit(-1);
+      }
     char string_to_read[STR_LENGTH];
     for (j = 0; j < offsetTable[i].linesToRead; j++ ){
 
@@ -82,7 +84,6 @@ int* threadedFunction(void *arguments)
       }
 
     }
-    linesRead += j; /* só para confirmar linhas lidas */
 
     if (close (fd) == -1)  {
       perror ("Error closing file");
@@ -108,8 +109,6 @@ int main (int argc, char** argv) {
   int err, fd, size, random;
   long i;
   void *returnvalue;
-  linesRead = 0;
-
 
   srandom ((unsigned) time(NULL));
 
@@ -118,13 +117,25 @@ int main (int argc, char** argv) {
   file = myfiles[random]; /* para testar alterar para myfiles[0] e alterar ficheiro SO2014-0.txt */
 
   fd = open (file, O_RDONLY);
+
   if (read (fd, stringToCompare, STR_LENGTH) == -1) {
     perror ("Error reading file");
     exit (-1);
   }
-  size = lseek(fd, (off_t) 0, SEEK_END);
+
+  if((size = lseek(fd, (off_t) 0, SEEK_END)) ==-1 )
+    {
+      perror("Error while getting the file size");
+      exit(-1);
+    }
+
   initOffsetTable(size);
-  close(fd);
+
+  if (close (fd) == -1)  {
+    perror ("Error closing file");
+    exit (-1);
+  }
+  
   for (i = 0; i < N_THREADS; i++) {
     err = pthread_create (&serverThreads[i], NULL, (void*) threadedFunction, (void*)i);
     if (err != 0) {
@@ -135,7 +146,6 @@ int main (int argc, char** argv) {
 
   for (i = 0; i < N_THREADS; i++) {
     err = pthread_join (serverThreads[i], &returnvalue);
-    /*printf("returnvalue: %ld\n", (long int)returnvalue);*/ /*confirmar return value (apagar antes de submeter) */
     if (err != 0) {
       perror ("\nerror: thread creation failed\n");
       exit (EXIT_FAILURE);
@@ -147,7 +157,8 @@ int main (int argc, char** argv) {
       }
   }
 
-  /*printf("linesRead: %d\n", linesRead);*/ /* confirmar linhas (apagar antes de submeter) */
+  printf("File %s is consistent\n", file);
+
 
   return 0;
 }
